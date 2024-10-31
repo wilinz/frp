@@ -36,11 +36,6 @@ jobs:
           mkdir -p build/output
           gomobile bind -v -target=android -androidapi 21 -o build/output/frpclib.aar github.com/fatedier/frp/cmd/frpc/frpclib
 
-      - name: Build Sources JAR
-        run: |
-          cd build/output
-          jar cf frpclib-sources.jar -C ../../../cmd/frpc/frpclib . # 打包源代码文件夹到 sources.jar
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
