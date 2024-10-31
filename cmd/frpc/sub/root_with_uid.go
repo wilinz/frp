@@ -96,6 +96,9 @@ func RunClientWithUid(uid string, cfgFilePath string, strictConfigMode bool) err
 	if err != nil {
 		return err
 	}
+	if IsRunning(uid) {
+		Close(uid)
+	}
 	return startServiceWithUid(uid, cfg, proxyCfgs, visitorCfgs, cfgFilePath)
 }
 
