@@ -21,6 +21,11 @@ var (
 	servicesMutex sync.RWMutex // To ensure thread safety
 )
 
+type RunMultipleClientConfig struct {
+	Uid  string
+	Path string
+}
+
 // GetUids returns a list of all active UIDs.
 func GetUids() []string {
 	servicesMutex.RLock()
@@ -94,20 +99,20 @@ func RunClientWithUid(uid string, cfgFilePath string, strictConfigMode bool) err
 	return startServiceWithUid(uid, cfg, proxyCfgs, visitorCfgs, cfgFilePath)
 }
 
-// RunMultipleClientsWithUid runs multiple client services with UID control.
-// It accepts a map where the key is the UID and the value is the config file path.
-func RunMultipleClientsWithUid(uidConfigMap map[string]string, strictConfigMode bool) error {
+// RunMultipleClientsWithUid 运行多个带有 UID 控制的客户端服务
+// 接收包含 UID 和路径的结构体列表
+func RunMultipleClientsWithUid(configs []RunMultipleClientConfig, strictConfigMode bool) error {
 	var wg sync.WaitGroup
-	for uid, cfgFilePath := range uidConfigMap {
+	for _, config := range configs {
 		wg.Add(1)
-		go func(uid, path string) {
+		go func(cfg RunMultipleClientConfig) {
 			defer wg.Done()
-			err := RunClientWithUid(uid, path, strictConfigMode)
+			err := RunClientWithUid(cfg.Uid, cfg.Path, strictConfigMode)
 			if err != nil {
-				fmt.Printf("frpc service error for UID [%s] with config file [%s]: %v\n", uid, path, err)
+				fmt.Printf("frpc service error for UID [%s] with config file [%s]: %v\n", cfg.Uid, cfg.Path, err)
 			}
-		}(uid, cfgFilePath)
-		// Small sleep to prevent overwhelming the system
+		}(config)
+		// 防止系统过载，添加一个小的延迟
 		time.Sleep(time.Millisecond)
 	}
 	wg.Wait()

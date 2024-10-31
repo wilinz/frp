@@ -1,12 +1,16 @@
 package frpclib
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/fatedier/frp/cmd/frpc/sub"
 	"github.com/fatedier/frp/pkg/util/system"
 	"github.com/fatedier/frp/pkg/util/version"
 	"strings"
 )
+
+// RunMultipleClientConfig Export
+type RunMultipleClientConfig sub.RunMultipleClientConfig
 
 func RunClientWithUid(uid string, cfgFilePath string, isStrictConfigMode bool, isShowVersion bool) (errString string) {
 	system.EnableCompatibilityMode()
@@ -21,25 +25,27 @@ func RunClientWithUid(uid string, cfgFilePath string, isStrictConfigMode bool, i
 
 }
 
-func RunMultipleClientsWithUid(uids []string, cfgFilePaths []string, isStrictConfigMode bool, isShowVersion bool) (errString string) {
+func RunMultipleClientsWithUid(runMultipleClientConfigListJson string, isStrictConfigMode bool, isShowVersion bool) (errString string) {
 	system.EnableCompatibilityMode()
-	if len(uids) != len(cfgFilePaths) {
-		return "Error: The lengths of uids and cfgFilePaths must be the same."
+
+	// 将 JSON 字符串解析为 map[string]string
+	var runMultipleClientConfigList []sub.RunMultipleClientConfig
+	err := json.Unmarshal([]byte(runMultipleClientConfigListJson), &runMultipleClientConfigList)
+	if err != nil {
+		return "Error: Failed to parse JSON input - " + err.Error()
 	}
+
+	// 如果需要显示版本信息
 	if isShowVersion {
 		fmt.Println(version.Full())
 	}
-	// Create the uidConfigMap from the slices
-	uidConfigMap := make(map[string]string)
-	for i := 0; i < len(uids); i++ {
-		uidConfigMap[uids[i]] = cfgFilePaths[i]
-	}
 
-	// Call sub.RunMultipleClientsWithUid with the constructed map
-	err := sub.RunMultipleClientsWithUid(uidConfigMap, isStrictConfigMode)
+	// 调用子模块的函数
+	err = sub.RunMultipleClientsWithUid(runMultipleClientConfigList, isStrictConfigMode)
 	if err != nil {
 		return err.Error()
 	}
+
 	return ""
 }
 
