@@ -1,6 +1,7 @@
 name: Build and Release frpclib AAR
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - '*'
@@ -22,7 +23,7 @@ jobs:
       - name: Install Android SDK and NDK
         uses: android-actions/setup-android@v2
         with:
-          ndk: '23.1.7779620'  # 指定 NDK 版本
+          ndk: '27.0.12077973'  # 指定 NDK 版本
 
       - name: Install gomobile
         run: |
