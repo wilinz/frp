@@ -28,12 +28,13 @@ jobs:
       - name: Install gomobile
         run: |
           go install golang.org/x/mobile/cmd/gomobile@latest
+          go get -u golang.org/x/mobile/bind
           gomobile init
 
       - name: Build AAR
         run: |
           mkdir -p build/output
-          gomobile bind -v -target=android -o build/output/frpclib.aar github.com/fatedier/frp/cmd/frpc/frpclib
+          gomobile bind -v -target=android -androidapi 21 -o build/output/frpclib.aar github.com/fatedier/frp/cmd/frpc/frpclib
 
       - name: Build Sources JAR
         run: |
