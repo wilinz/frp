@@ -71,7 +71,7 @@ func delServiceByUid(uid string) {
 func Close(uid string) bool {
 	svr := getServiceByUid(uid)
 	if svr != nil {
-		svr.GracefulClose(500 * time.Millisecond)
+		svr.Close()
 		delServiceByUid(uid)
 		return true
 	}
