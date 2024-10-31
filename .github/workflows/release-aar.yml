@@ -1,0 +1,71 @@
+name: Build and Release frpclib AAR
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Build AAR and Sources JAR, Upload to Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go environment
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.22'  # 请根据需要调整 Go 版本
+
+      - name: Install Android SDK and NDK
+        uses: android-actions/setup-android@v2
+        with:
+          ndk: '23.1.7779620'  # 指定 NDK 版本
+
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          gomobile init
+
+      - name: Build AAR
+        run: |
+          mkdir -p build/output
+          gomobile bind -v -target=android -o build/output/frpclib.aar github.com/fatedier/frp/cmd/frpc/frpclib
+
+      - name: Build Sources JAR
+        run: |
+          cd build/output
+          jar cf frpclib-sources.jar -C ../../../cmd/frpc/frpclib . # 打包源代码文件夹到 sources.jar
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload AAR to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/output/frpclib.aar
+          asset_name: frpclib.aar
+          asset_content_type: application/java-archive
+
+      - name: Upload Sources JAR to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/output/frpclib-sources.jar
+          asset_name: frpclib-sources.jar
+          asset_content_type: application/java-archive
